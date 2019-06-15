@@ -6,7 +6,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
@@ -46,17 +46,44 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		IProject project = file != null ? file.getProject() : null;
 		
 		if (project != null) {
+			Executor executor = new Executor(project.getLocation().toOSString());
 			try {
-				project.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor());
+				project.build(IncrementalProjectBuilder.CLEAN_BUILD, new IProgressMonitor() {
+					@Override
+					public void worked(int arg0) {}
+					
+					@Override
+					public void subTask(String arg0) {}
+					
+					@Override
+					public void setTaskName(String arg0) {}
+					
+					@Override
+					public void setCanceled(boolean arg0) {}
+					
+					@Override
+					public boolean isCanceled() { return false;	}
+					
+					@Override
+					public void internalWorked(double arg0) {}
+					
+					@Override
+					public void beginTask(String arg0, int arg1) {}
+					
+					@Override
+					public void done() {
+						System.out.println("The project has been successfully built.");
+						try {
+							executor.execute();
+						} catch (IOException e) {
+							e.printStackTrace();
+						} 
+					}
+					
+				});
 			} catch (CoreException e) {
 				e.printStackTrace();
 			}
-			Executor executor = new Executor(project.getLocation().toOSString());
-			try {
-				executor.execute();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} 
 		} else {
 			MessageDialog.openInformation(
 					window.getShell(),
