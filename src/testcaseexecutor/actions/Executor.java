@@ -21,9 +21,23 @@ public class Executor {
     static final long LIMIT_MILLIS = 5000;
 
     private String projectDir;
+    private File classFile;
 
     public Executor(String projectDir) {
         this.projectDir = projectDir;
+        this.classFile = new File(projectDir + "/bin/mypackage/Main.class");
+    }
+
+    public void waitUntilClassFileAppears() {
+        while (!classFile.exists()) {
+            try {
+                // System.out.println("There is no class file. Please wait...");
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return;
     }
 
     public void execute() throws IOException {
@@ -38,6 +52,8 @@ public class Executor {
         List<String> testCases = getTestCases(testCaseFile);
 
         String[] cmd = {"java", "-cp", projectDir + "/bin/", "mypackage.Main"};
+
+        waitUntilClassFileAppears();
 
         for (int i = 0; i < testCases.size(); i++) {
             String input = testCases.get(i);
